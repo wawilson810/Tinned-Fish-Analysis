@@ -16,5 +16,11 @@ The deep learning model that we used was the [amazon-review-sentiment-analysis](
 
 In order to get the sentiment of specific words we first got the scores for the entire reviews. Using these scores we also calculated a predicted rating of the review with a weighted sum to compare to the actual ratings. Then we iterated through each review again, searching to see if any of the list of descriptive words we found previously were used. If a review was found to contain one of the words, the review was run through the model again but with that word removed and the difference between the confidence scores of the overall review and the review without the word was recorded as its Sentiment Contribution. The Sentiment Contribution is how much a selected keyword added or took away from the confidence scores for a review. Each instance of a word in a review was run separately since we didn't want to record the cumulative change, only the contribution of individual uses, and after this was done for every review and every keyword the values for the Sentiment Contribution were averaged.
 
-## Deep Learning Accuracy
+## Visualizations
+
+### Deep Learning Accuracy
+
+One of the first things we looked at was the accuracy of the deep learning model's predictions on the overall reviews. Below is a graph of the distribution of the absolute value of the difference between the actual and predicted ratings.
+
+![Prediction Error](https://github.com/wawilson810/Tinned-Fish-Analysis/blob/main/Visualizations/Prediction_Error.png)
 
