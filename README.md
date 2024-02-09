@@ -18,9 +18,14 @@ In order to get the sentiment of specific words we first got the scores for the 
 
 ## Visualizations
 
+All of the following visualizations come from a Looker Studio Report which can be accessed through this [link](https://lookerstudio.google.com/reporting/79d02342-b0f1-459d-a620-afa5ff19ffd8) for closer examination.
+
 ### Deep Learning Accuracy
 
 One of the first things we looked at was the accuracy of the deep learning model's predictions on the overall reviews. Below is a graph of the distribution of the absolute value of the difference between the actual and predicted ratings.
 
 ![Prediction Error](https://github.com/wawilson810/Tinned-Fish-Analysis/blob/main/Visualizations/Prediction_Error.png)
 
+The distribution is broken down by the actual rating of each review and from it we can see that 5 star reviews made up the majority of the reviews we looked at and the predictions tended to be 1 off from the actual value. The most accurate predictions were those for 4 and 3 star rated reviews whose predictions tend to only have an error of 1 or less.
+
+### Noticeable Findings
