@@ -2,19 +2,44 @@
 
 ## Overview
 
-Inspired by the recent trends on TikTok surrounding tinned and canned fish, we decided to study Amazon reviews of tinned and canned fish products. We sourced these reviews from a [database](https://cseweb.ucsd.edu/~jmcauley/datasets/amazon_v2/) compiled by Jianmo Ni of UCSD of amazon reviews and product descriptions which was last updated in 2018. The purpose of this study was to identify keywords used in the reviews and identify how they contribute to the rating of the review either positively or negatively to identify what customers value in these products. To do this, several different methods were explored and in the end, a Sentiment Analysis approach using a deep learning model was chosen. A reason we chose this method instead of a more established lexicon based Sentiment Analysis method like Vader is because the lexicon based approach requires a predetermined dictionary of words and sentiment weights, the latter of which being what we were aiming to find. Another issue is that after examination of these dictionaries, many of the descriptive words that pertain specifically to food were given neutral sentiment weights which would not reveal anything useful. Using the deep learning model, we aimed to examine how words affected the overall sentiment of each review in context.
+Inspired by the recent [trends on TikTok surrounding tinned and canned fish](https://time.com/6250195/tinned-fish-tiktok-shortage/), I decided to study Amazon reviews of tinned and canned fish products. I sourced these reviews from a [database](https://cseweb.ucsd.edu/~jmcauley/datasets/amazon_v2/) compiled by Jianmo Ni of UCSD of Amazon reviews and product descriptions (last updated in 2018). 
+
+The purpose of this study was to identify how specific keywords contribute to the rating of the review either positively or negatively. This could help manufacturers gain insight into what customers value in these products. 
+
+After several iterations I chose to use a deep learning model to conduct Sentiment Analysis. Using a deep learning model proved more appropriate than a more traditional lexicon based approach to Sentiment Analysis for two key reasons:
+
+  1. The lexicon based approach requires a predetermined library of words and their sentiment weights, while I was looking to find the relative sentiment weight within a specific review.
+     
+  2. Within these dictionaries, descriptive words related to food were given neutral sentiment weights making them useless for this project.
+
+The deep learning model was chosen in order to get around these limitations by having the model find an equivalent to the sentiment weights of the lexicon based approach which takes into account how words are used in each review.
 
 ## Data Sourcing and Cleaning
 
-The data was sourced from the previously mentioned database which separates the Amazon reviews and product information into separate files which are then also separated by category. The data on tinned and canned fish fell under the 'Grocery and Gourmet Food' category. The [review](https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/categoryFiles/Grocery_and_Gourmet_Food.json.gz) and [product](https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Grocery_and_Gourmet_Food.json.gz) data is not stored in this repository as the files are too large but can be downloaded for your own examination.
+The data was sourced from the previously mentioned database which separates the Amazon reviews and product information into separate files which are then also separated by category. The data on tinned and canned fish fell under the 'Grocery and Gourmet Food' category. The [review](https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/categoryFiles/Grocery_and_Gourmet_Food.json.gz) and [product](https://datarepo.eng.ucsd.edu/mcauley_group/data/amazon_v2/metaFiles2/meta_Grocery_and_Gourmet_Food.json.gz) data are not stored in this repository as the files are too large, but can be downloaded for your own examination.
 
-The first step for cleaning the data was removing all products and reviews for products that were not in the sub-category of 'Tinned and Canned Fish' and combining the datasets with only the information needed for the analysis which included the star rating, the date of the review, the text of the review itself and finally which type of fish the product was made with. Then Natural Language Processing techniques were used to clean the review text of errant punctuation and remove stop words which are words which are common in the language but carry much meaning such as 'the', 'in' or 'an.' Then each word was labelled by Part of Speech and all words which were identified to be acting as adjectives or descriptive words were added to the list categorized by what fish the product was made from. The star ratings of the reviews each word were used in and the total number of uses was also counted. For the sake of computational time, it was decided to focus on words which occurred in reviews with average ratings of 2.5 or higher.
+The steps for cleaning the data were:
+
+  1. Removing all products and reviews that were not in the  sub-category of 'Tinned and Canned Fish', then filtering the datasets for star rating, date of the review, the review copy, and the type of fish.
+  2. Several Natural Language Processing (NLP) techniques were used to process the reviews in preparation for the model.
+     - Errant punctuation was removed to standardize the text.
+     - Stop words which are words such as  'the', 'in' or 'an' which occur frequently but do not carry much meaning were removed.
+  3. Once the reviews were processed, every word in the text was labeled according to its Part of Speech and all words labeled as ‘adjectives’ were added to a list of keywords.
+     - Generic adjectives such as ‘good’ or ‘bad’ were filtered out of the list of keywords.
+  4. After looking at the total number of reviews for each type of fish, it was decided to focus only on Tuna, Sardines, Anchovies and Salmon because reviews of products made from other fish made up a much smaller portion of the data.
+
 
 ## Deep Learning
 
-The deep learning model that we used was the [amazon-review-sentiment-analysis](https://huggingface.co/LiYuan/amazon-review-sentiment-analysis) by LiYuan which can be found on HuggingFace. This model was chosen because it was trained on Amazon review data and it predicts the sentiment of a review as a number of stars between 1 and 5 to replicate the ratings on Amazon products. This means that when a review is put through the model, it returns a confidence score for each star to indicate how strongly it feels that the review was given that number of stars. This is helpful to us as it not only lets us see if a word is used in a positive or negative way but also if it pushes the review towards a specific number of stars.
+The deep learning model that we used was the [amazon-review-sentiment-analysis](https://huggingface.co/LiYuan/amazon-review-sentiment-analysis) by LiYuan which can be found on HuggingFace. This model was chosen because it was trained on Amazon review data and it predicts the sentiment of a review as a number of stars between 1 and 5 to replicate the ratings on Amazon products. This means that when a review is put through the model, it returns a confidence score for each star to indicate how likely it has determined that the review was given that corresponding number of stars. With this model I could determine the sentiment of a keyword within a review along with a corresponding predicted star rating for the entire review.
 
-In order to get the sentiment of specific words we first got the scores for the entire reviews. Using these scores we also calculated a predicted rating of the review with a weighted sum to compare to the actual ratings. Then we iterated through each review again, searching to see if any of the list of descriptive words we found previously were used. If a review was found to contain one of the words, the review was run through the model again but with that word removed and the difference between the confidence scores of the overall review and the review without the word was recorded as its Sentiment Contribution. The Sentiment Contribution is how much a selected keyword added or took away from the confidence scores for a review. Each instance of a word in a review was run separately since we didn't want to record the cumulative change, only the contribution of individual uses, and after this was done for every review and every keyword the values for the Sentiment Contribution were averaged.
+The first step in the process was finding the confidence scores for the full reviews which would act as a baseline which can be used to measure the effect of each individual keyword in the review. Using these scores we also calculated a predicted rating of the review with a weighted sum to compare to the actual ratings to examine the accuracy of the model.
+
+
+To determine how each keyword affected the reviews it occurred in, I first iterated through each review again and searched for all of the previously identified keywords in the review. If a review was found to contain one of the keywords, the review was run through the model again but with that word removed. The difference between the confidence scores of the original review and the review without the keyword was recorded as its Sentiment Contribution. The Sentiment Contribution is what I used as the equivalent of the sentiment weights I mentioned earlier when referring to the lexicon based approach for Sentiment Analysis. It is a measure of how much each keyword steers the model’s prediction for the review’s star rating towards or from each number of stars.
+
+Each instance of a keyword in a review was run through the model separately to avoid recording cumulative change. After this process was repeated for each keyword across every instance it appears in the reviews, the values for the Sentiment Contribution were averaged for each word across all reviews.
+
 
 ## Visualizations
 
@@ -26,26 +51,26 @@ One of the first things we looked at was the accuracy of the deep learning model
 
 ![Prediction Error](https://github.com/wawilson810/Tinned-Fish-Analysis/blob/main/Visualizations/Prediction_Error.png)
 
-The distribution is broken down by the actual rating of each review and from it we can see that 5 star reviews made up the majority of the reviews we looked at and the predictions tended to be 1 off from the actual value. The most accurate predictions were those for 4 and 3 star rated reviews whose predictions tend to only have an error of 1 or less.
+The distribution is broken down by the actual rating of each review and from it I can see that 5 star reviews were most frequent and the star rating predictions tended to be off by +/- 1 star from the actual value. . The most accurate predictions were those for 4 and 3 star rated reviews whose predictions tend to only have an error of 1 or less.
 
 ### Noticeable Findings
 
-For the actual visualizations, we decided to focus on the four fish with the largest number of uses of our key words which are Tuna, Sardines, Salmon and Anchovies. One of the main things we looked at was how the Sentiment Contribution for each word compared between these different fish to see if there were any noticeable differences in how the words were used in those reviews. Here are some significant examples.
+For the actual visualizations, I decided to focus on the four fish with the largest number of reviews which are Tuna, Sardines, Salmon and Anchovies. One of the main things I looked at was how the Sentiment Contribution for each word compared between these different fish to see if there were any noticeable differences in how the words were used in those reviews. Here are some significant examples.
 
 #### Omega
 
 ![Omega](https://github.com/wawilson810/Tinned-Fish-Analysis/blob/main/Visualizations/omega.png)
 
-One of the words we were interested in the most was 'omega' since the amount of omega fatty acids in fish, specifically species often found in tinned fish, has been talked about a lot in recent years. From this graph we see that for most of the species, it contributes pretty neutrally to the confidence score of each star rating with the exception of anchovies where it contributes highly to 5 star reviews. This indicates that this is an important factor when people consider different tinned anchovy products.
+One of the words I was interested in the most was 'omega' since the amount of omega fatty acids in fish, specifically species often found in tinned fish, is sought after for health benefits. This graph shows the Average Sentiment Contribution for the four fish we focused on; Sardines, Salmon, Tuna and Anchovies. From this graph we see that for most of the species, this keyword contributes fairly neutrally to the confidence score of each star rating, with the exception of anchovies where it has a higher contribution to 4 and 5 star reviews. This indicates that this is an important factor when people consider different tinned anchovy products.
 
 #### Wild
 
 ![Wild](https://github.com/wawilson810/Tinned-Fish-Analysis/blob/main/Visualizations/wild.png)
 
-This is interesting because it shows a negative association with the word wild in two of the three shown fish, showing it contributing to 1 and 2 star reviews and detracting from 4 and 5 star reviews. The exception to this is with Salmon which indicates a high favorability for wild caught salmon as opposed to farm raised.
+This is interesting because it shows a negative association with the word ‘wild’ in tuna as opposed to the other fish, showing it contributing to 1 and 2 star reviews and detracting from 4 and 5 star reviews. The exception to this is with Salmon which indicates a high favorability for wild caught salmon and sardines as opposed to captively ranched tuna which could stem from concerns over population depletion.
 
 #### Local
 
 ![Local](https://github.com/wawilson810/Tinned-Fish-Analysis/blob/main/Visualizations/local.png)
 
-Almost as a counter to the previous example, here we can see that the word local contributes positively to higher ratings for these fish except for tuna and salmon at the 5 star rating. This could indicate a bias towards imported products or products from specific regions for these two larger species of fish.
+Continuing with the focus on where the fish were sourced, let us look at the word ‘local.’ Here we can see that the word local contributes positively to higher ratings for these fish except for tuna and salmon at the 5 star rating. This could indicate a bias towards imported products or products from specific regions for these two larger, oftentimes more expensive species of fish.
